@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -24,10 +24,12 @@ export default function ShelfScreen({ token, onLogout }) {
 
   const [isScanning, setIsScanning] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [addingBooks, setAddingBooks] = useState(false);
   const [error, setError] = useState(null);
 
-  async function loadShelf() {
+  // ISBNs whose backend requests are currently in progress
+  const [processingIsbns, setProcessingIsbns] = useState([]);
+
+  const loadShelf = useCallback(async () => {
     setError(null);
 
     try {
@@ -41,18 +43,18 @@ export default function ShelfScreen({ token, onLogout }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [token]);
 
   useEffect(() => {
     loadShelf();
-  }, []);
+  }, [loadShelf]);
 
   /*
-   * This function is called by BarcodeScanner.
+   * Called by BarcodeScanner.
    *
    * IMPORTANT:
-   * It must return synchronously because BarcodeScanner
-   * immediately uses the return value to decide whether
+   * This must return synchronously because BarcodeScanner
+   * immediately uses the return value to determine whether
    * the scan was new or a duplicate.
    */
   function handleScan(isbn) {
@@ -67,42 +69,55 @@ export default function ShelfScreen({ token, onLogout }) {
       isbn,
     ]);
 
+    // Do NOT await this.
+    // The request runs independently while scanning continues.
+    processBook(isbn);
+
     return true;
+  }
+
+  async function processBook(isbn) {
+    setProcessingIsbns((previous) => [
+      ...previous,
+      isbn,
+    ]);
+
+    try {
+      const book = await addBook(isbn, token);
+
+      setBooks((previousBooks) => {
+        const alreadyExists = previousBooks.some(
+          (existingBook) => existingBook.isbn === book.isbn
+        );
+
+        if (alreadyExists) {
+          return previousBooks;
+        }
+
+        return [...previousBooks, book];
+      });
+    } catch (err) {
+      setError(
+        err.response?.data?.error ||
+        `Could not add book ${isbn}`
+      );
+    } finally {
+      setProcessingIsbns((previous) =>
+        previous.filter((item) => item !== isbn)
+      );
+    }
   }
 
   /*
    * The user has finished scanning.
    *
-   * Now we actually communicate with the backend.
+   * The requests already fired by processBook() continue
+   * running independently. We only close the scanner and
+   * clear the temporary scanning-session list.
    */
-  async function handleFinishScanning() {
+  function handleFinishScanning() {
     setIsScanning(false);
-
-    if (scannedIsbns.length === 0) {
-      return;
-    }
-
-    setAddingBooks(true);
-    setError(null);
-
-    try {
-      for (const isbn of scannedIsbns) {
-        await addBook(isbn, token);
-      }
-
-      // Get the authoritative version from the backend.
-      await loadShelf();
-
-      // Clear the scanning session.
-      setScannedIsbns([]);
-    } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        'Could not add books to your shelf'
-      );
-    } finally {
-      setAddingBooks(false);
-    }
+    setScannedIsbns([]);
   }
 
   async function handleDeleteBook(isbn) {
@@ -157,6 +172,7 @@ export default function ShelfScreen({ token, onLogout }) {
 
       <BookList
         books={books}
+        processingIsbns={processingIsbns}
         onDelete={handleDeleteBook}
       />
 
@@ -166,7 +182,6 @@ export default function ShelfScreen({ token, onLogout }) {
           setScannedIsbns([]);
           setIsScanning(true);
         }}
-        disabled={addingBooks}
       >
         <Text style={styles.scanButtonText}>
           Scan Books
