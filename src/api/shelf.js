@@ -7,7 +7,7 @@ function authHeaders(token) {
 }
 
 export async function getMyShelf(token) {
-  const response = await api.get('/shelf/books', {
+  const response = await api.get('/shelf', {
     headers: authHeaders(token),
   });
 
@@ -16,7 +16,7 @@ export async function getMyShelf(token) {
 
 export async function addBook(isbn, token) {
   const response = await api.post(
-    '/shelf/books',
+    '/shelf',
     { isbn },
     {
       headers: authHeaders(token),
@@ -27,7 +27,7 @@ export async function addBook(isbn, token) {
 }
 
 export async function deleteBook(isbn, token) {
-  await api.delete(`/shelf/books/${isbn}`, {
+  await api.delete(`/shelf/${isbn}`, {
     headers: authHeaders(token),
   });
 }
