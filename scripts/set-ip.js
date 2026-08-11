@@ -1,6 +1,14 @@
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
+
+const port = process.env.EXPO_PUBLIC_PORT;
+
+if (!port) {
+    console.error('EXPO_PUBLIC_PORT is not set.');
+    process.exit(1);
+}
 
 const interfaces = os.networkInterfaces();
 
@@ -27,12 +35,14 @@ if (!localIp) {
     process.exit(1);
 }
 
-const apiUrl = `http://${localIp}:3001`;
+const apiUrl = `http://${localIp}:${port}`;
+
 // eslint-disable-next-line no-undef
 const envPath = path.join(__dirname, '..', '.env');
 
 fs.writeFileSync(
     envPath,
+    `EXPO_PUBLIC_PORT=${port}\n`
     `EXPO_PUBLIC_API_URL=${apiUrl}\n`
 );
 

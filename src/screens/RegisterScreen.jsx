@@ -13,7 +13,7 @@ import { register } from '../api/auth';
 export default function RegisterScreen({ onRegister, onBack }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [handle, setHandle] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,7 +26,7 @@ export default function RegisterScreen({ onRegister, onBack }) {
       const result = await register(
         email,
         password,
-        displayName
+        handle
       );
 
       onRegister(result);
@@ -46,9 +46,9 @@ export default function RegisterScreen({ onRegister, onBack }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Display name"
-        value={displayName}
-        onChangeText={setDisplayName}
+        placeholder="Handle"
+        value={handle}
+        onChangeText={setHandle}
       />
 
       <TextInput

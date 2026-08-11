@@ -25,9 +25,6 @@ export default function LoginScreen({ onLogin, onRegister }) {
       // App.js receives { user, token }
       onLogin(result);
     } catch (err) {
-      console.log(err)
-      console.log(err.message)
-      console.log(err.response)
       setError(
         err.response?.data?.error ||
         'Could not connect to the server'
