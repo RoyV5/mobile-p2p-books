@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { register } from '../api/auth';
+import { register } from '../../api/auth';
+import { useAuth } from '../../context/AuthContext';
 
-export default function RegisterScreen({ onRegister, onBack }) {
+export default function RegisterScreen({ navigation }) {
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [handle, setHandle] = useState('');
@@ -29,7 +31,7 @@ export default function RegisterScreen({ onRegister, onBack }) {
         handle
       );
 
-      onRegister(result);
+      login(result);
     } catch (err) {
       setError(
         err.response?.data?.error ||
@@ -49,6 +51,7 @@ export default function RegisterScreen({ onRegister, onBack }) {
         placeholder="Handle"
         value={handle}
         onChangeText={setHandle}
+        autoCapitalize="none"
       />
 
       <TextInput
@@ -81,7 +84,9 @@ export default function RegisterScreen({ onRegister, onBack }) {
         }
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={onBack}>
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+      >
         <Text style={styles.link}>Back to login</Text>
       </TouchableOpacity>
     </View>

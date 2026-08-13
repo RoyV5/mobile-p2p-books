@@ -8,31 +8,34 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import { login } from '../api/auth';
+import { login as loginApi } from '../../api/auth';
+import { useAuth } from '../../context/AuthContext';
 
-export default function LoginScreen({ onLogin, onRegister }) {
+export default function LoginScreen({ navigation }) {
+  const { login } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  async function handleLogin() {
-    setError(null);
-    setLoading(true);
+async function handleLogin() {
+  setError(null);
+  setLoading(true);
 
-    try {
-      const result = await login(email, password);
-      // App.js receives { user, token }
-      onLogin(result);
-    } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        'Could not connect to the server'
-      );
-    } finally {
-      setLoading(false);
-    }
+  try {
+    const result = await loginApi(email, password);
+
+    login(result);
+  } catch (err) {
+    setError(
+      err.response?.data?.error ||
+      'Could not connect to the server'
+    );
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <View style={styles.container}>
@@ -69,7 +72,9 @@ export default function LoginScreen({ onLogin, onRegister }) {
         }
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={onRegister}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Register')}
+      >
         <Text style={styles.link}>Create an account</Text>
       </TouchableOpacity>
     </View>

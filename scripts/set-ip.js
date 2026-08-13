@@ -42,8 +42,7 @@ const envPath = path.join(__dirname, '..', '.env');
 
 fs.writeFileSync(
     envPath,
-    `EXPO_PUBLIC_PORT=${port}\n`
-    `EXPO_PUBLIC_API_URL=${apiUrl}\n`
+    `EXPO_PUBLIC_PORT=${port}\nEXPO_PUBLIC_API_URL=${apiUrl}\n`
 );
 
 console.log(`API URL set to ${apiUrl}`);

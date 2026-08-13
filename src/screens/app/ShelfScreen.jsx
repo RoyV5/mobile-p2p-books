@@ -7,16 +7,20 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-import BarcodeScanner from '../components/BarcodeScanner';
-import BookList from '../components/BookList';
+import BarcodeScanner from '../../components/BarcodeScanner';
+import BookList from '../../components/BookList';
 
 import {
   getMyShelf,
   addBook,
   deleteBook,
-} from '../api/shelf';
+} from '../../api/shelf';
 
-export default function ShelfScreen({ token, onLogout }) {
+import { useAuth } from '../../context/AuthContext';
+
+export default function ShelfScreen() {
+  const { auth } = useAuth();
+  const token = auth?.token;
   const [books, setBooks] = useState([]);
 
   // ISBNs collected during the current scanning session
@@ -158,10 +162,6 @@ export default function ShelfScreen({ token, onLogout }) {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>My Shelf</Text>
-
-        <TouchableOpacity onPress={onLogout}>
-          <Text>Log out</Text>
-        </TouchableOpacity>
       </View>
 
       {error && (
