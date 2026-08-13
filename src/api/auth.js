@@ -18,3 +18,13 @@ export async function register(email, password, handle) {
 
   return response.data;
 }
+
+export async function getMe(token) {
+    const response = await api.get('/auth/me', {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    return response.data;
+}
