@@ -10,9 +10,9 @@ import {
 export default function BookItem({ book, onDelete }) {
   return (
     <View style={styles.listItem}>
-      {book.cover_url ? (
+      {book.coverUrl ? (
         <Image
-          source={{ uri: book.cover_url }}
+          source={{ uri: book.coverUrl }}
           style={styles.cover}
         />
       ) : (
@@ -30,9 +30,9 @@ export default function BookItem({ book, onDelete }) {
           {book.authors?.join(', ') || 'Unknown author'}
         </Text>
 
-        {book.page_count && (
+        {book.pageCount && (
           <Text style={styles.pages}>
-            {book.page_count} pages
+            {book.pageCount} pages
           </Text>
         )}
 

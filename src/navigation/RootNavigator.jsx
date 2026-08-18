@@ -18,13 +18,17 @@ export default function RootNavigator() {
 
     const [showLoading, setShowLoading] = useState(true);
 
+    const [mountedAuth, setMountedAuth] = useState(null);
+
     const contentOpacity = useRef(
         new Animated.Value(0)
     ).current;
 
     useEffect(() => {
+        // Initial load: when loading finishes, mount the current auth value
         if (!loading) {
             setShowLoading(false);
+            setMountedAuth(auth);
 
             Animated.timing(contentOpacity, {
                 toValue: 1,
@@ -32,7 +36,31 @@ export default function RootNavigator() {
                 useNativeDriver: true
             }).start();
         }
-    }, [loading, contentOpacity]);
+    }, [loading, contentOpacity, auth]);
+
+    useEffect(() => {
+        // If auth changes after initial mount, cross-fade between the
+        // old and new navigator contents.
+        if (loading) return;
+        if (mountedAuth === null) return;
+
+        if (auth !== mountedAuth) {
+            // Fade out the current content, switch mountedAuth, then fade in
+            Animated.timing(contentOpacity, {
+                toValue: 0,
+                duration: 250,
+                useNativeDriver: true
+            }).start(() => {
+                setMountedAuth(auth);
+
+                Animated.timing(contentOpacity, {
+                    toValue: 1,
+                    duration: 300,
+                    useNativeDriver: true
+                }).start();
+            });
+        }
+    }, [auth, loading, mountedAuth, contentOpacity]);
 
     if (showLoading) {
         return <LoadingScreen />;
@@ -54,7 +82,7 @@ export default function RootNavigator() {
                     animation: 'none'
                 }}
             >
-                {auth ? (
+                {mountedAuth ? (
                     <Stack.Screen
                         name="App"
                         component={AppNavigator}

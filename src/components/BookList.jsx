@@ -13,6 +13,7 @@ export default function BookList({
   books,
   processingIsbns,
   onDelete,
+  emptyText = 'No books in your shelf yet. Scan some books!',
 }) {
   return (
     <FlatList
@@ -39,7 +40,7 @@ export default function BookList({
       ListEmptyComponent={
         processingIsbns.length === 0 ? (
           <Text style={styles.emptyText}>
-            No books in your shelf yet. Scan some books!
+            {emptyText}
           </Text>
         ) : null
       }

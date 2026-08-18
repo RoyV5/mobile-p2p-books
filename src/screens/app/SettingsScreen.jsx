@@ -351,7 +351,16 @@ export default function SettingsScreen() {
 
             <Pressable
                 style={styles.logoutButton}
-                onPress={logout}
+                onPress={() =>
+                    Alert.alert(
+                        'Log out',
+                        'Are you sure you want to log out?',
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: 'Log out', style: 'destructive', onPress: logout }
+                        ]
+                    )
+                }
             >
                 <Text style={styles.logoutText}>
                     Log out

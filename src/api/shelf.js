@@ -31,3 +31,11 @@ export async function deleteBook(isbn, token) {
     headers: authHeaders(token),
   });
 }
+
+export async function getUserShelf(userId, token) {
+  const response = await api.get(`/shelf/${userId}`, {
+    headers: authHeaders(token),
+  });
+
+  return response.data;
+}
