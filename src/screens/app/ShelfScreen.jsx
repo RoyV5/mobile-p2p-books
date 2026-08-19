@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 
 import BarcodeScanner from '../../components/BarcodeScanner';
@@ -101,15 +102,69 @@ export default function ShelfScreen() {
         return [...previousBooks, book];
       });
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        `Could not add book ${isbn}`
-      );
+      handleAddBookError(err, isbn);
     } finally {
       setProcessingIsbns((previous) =>
         previous.filter((item) => item !== isbn)
       );
     }
+  }
+
+  /*
+   * Scanning happens full-screen, over the camera view, so a
+   * banner elsewhere on ShelfScreen would go unnoticed until the
+   * user finishes scanning and backs out — often long after the
+   * failure happened, disconnected from which scan caused it.
+   * An immediate Alert surfaces the failure right when and where
+   * it occurred instead.
+   */
+  function handleAddBookError(err, isbn) {
+    setScannedIsbns(prev =>
+      prev.filter(scannedIsbn => scannedIsbn !== isbn)
+    );
+    const status = err.response?.status;
+    const code = err.response?.data?.code;
+    
+
+    if (status === 409) {
+      Alert.alert(
+        'Already on your shelf',
+        'This book is already in your library.'
+      );
+      return;
+    }
+
+    if (code === 'BOOK_NOT_FOUND') {
+      Alert.alert(
+        'Book not found',
+        `We couldn't find a book with ISBN ${isbn} in our ` +
+        'sources. Want to log it in manually?',
+        [
+          {
+            text: 'Log manually',
+            onPress: () => {
+              // TODO: manual-entry flow isn't built yet.
+              Alert.alert(
+                'Coming soon',
+                'Manually logging a book isn\u2019t available yet.'
+              );
+            },
+          },
+          { text: 'Dismiss', style: 'cancel' },
+        ]
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Could not add book',
+      err.response?.data?.error ||
+      `Something went wrong adding ${isbn}.`,
+      [
+        { text: 'Try Again', onPress: () => processBook(isbn) },
+        { text: 'Dismiss', style: 'cancel' },
+      ]
+    );
   }
 
   /*
