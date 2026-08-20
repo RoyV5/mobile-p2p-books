@@ -47,7 +47,7 @@ export default function BarcodeScanner({ onScan, onClose, totalScanned }) {
       <CameraView
         style={StyleSheet.absoluteFillObject}
         facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8', 'qr'] }}
+        barcodeScannerSettings={{ barcodeTypes: ['ean13'] }}
         onBarcodeScanned={handleBarcodeScanned}
       />
 
