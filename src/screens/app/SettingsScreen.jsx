@@ -308,6 +308,7 @@ export default function SettingsScreen() {
                     style={[styles.input, styles.descriptionInput]}
                     placeholder="Tell people a little about yourself"
                     multiline
+                    maxLength={100}
                 />
             </View>
 

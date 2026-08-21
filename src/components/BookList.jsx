@@ -11,9 +11,10 @@ import ProcessingBookItem from './ProcessingBookItem';
 
 export default function BookList({
   books,
-  processingIsbns,
+  processingIsbns = [],
   onDelete,
   emptyText = 'No books in your shelf yet. Scan some books!',
+  header, // 1. Add generic header prop
 }) {
   return (
     <FlatList
@@ -26,16 +27,20 @@ export default function BookList({
         />
       )}
       ListHeaderComponent={
-        processingIsbns.length > 0 ? (
-          <View>
-            {processingIsbns.map((isbn) => (
-              <ProcessingBookItem
-                key={isbn}
-                isbn={isbn}
-              />
-            ))}
-          </View>
-        ) : null
+        // 2. Render both the injected header and processing items
+        <View>
+          {header}
+          {processingIsbns.length > 0 && (
+            <View>
+              {processingIsbns.map((isbn) => (
+                <ProcessingBookItem
+                  key={isbn}
+                  isbn={isbn}
+                />
+              ))}
+            </View>
+          )}
+        </View>
       }
       ListEmptyComponent={
         processingIsbns.length === 0 ? (

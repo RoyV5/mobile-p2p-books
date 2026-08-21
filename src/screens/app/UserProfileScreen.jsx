@@ -61,44 +61,65 @@ export default function UserProfileScreen() {
     );
   }
 
+  // Define the header component once
+  const profileHeader = (
+    <UserHeader
+      displayName={profile.user.displayName}
+      handle={profile.user.handle}
+      profilePictureUrl={profile.user.profilePictureUrl}
+      description={profile.user.description}
+    />
+  );
+
   return (
     <View style={styles.container}>
-      <UserHeader
-        displayName={profile.user.displayName}
-        handle={profile.user.handle}
-        profilePictureUrl={profile.user.profilePictureUrl}
-      />
-
       {profile.books === null ? (
-        <View style={styles.privateBox} accessible accessibilityLabel="Private profile">
-          <Text style={styles.privateBadge}>🔒 Private profile</Text>
-          <Text style={styles.privateText}>
-            This profile is private.
-          </Text>
+        <View style={styles.paddedContent}>
+          {profileHeader}
+          <View style={styles.privateBox} accessible accessibilityLabel="Private profile">
+            <Text style={styles.privateBadge}>🔒 Private profile</Text>
+            <Text style={styles.privateText}>
+              This profile is private.
+            </Text>
+          </View>
         </View>
       ) : (
         <BookList
           books={profile.books}
           processingIsbns={[]}
           emptyText="This user hasn't added any books yet."
+          header={
+            <View style={styles.headerWrapper}>
+              {profileHeader}
+            </View>
+          }
         />
       )}
     </View>
   );
 }
 
+// Inside UserProfileScreen.js
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff', // <-- Ensure this is pure white to fix the book shadows
+  },
+  // Use this for static content like the private profile view
+  paddedContent: {
     padding: 20,
   },
-
+  // Ensures the header has padding, but the list items can span full width or handle their own padding
+  headerWrapper: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
   center: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   privateBox: {
     backgroundColor: '#f2f2f2',
     padding: 16,
@@ -108,19 +129,16 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignItems: 'center'
   },
-
   privateBadge: {
     fontWeight: '600',
     marginBottom: 8,
     color: '#666'
   },
-
   privateText: {
     fontSize: 16,
     color: '#666',
     textAlign: 'center'
   },
-
   error: {
     color: 'red',
   },
