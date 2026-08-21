@@ -2,17 +2,18 @@ import React, { useState, useRef } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
-export default function BarcodeScanner({ onScan, onClose, totalScanned }) {
+export default function BarcodeScanner({
+  onScan,
+  onClose,
+  onManualEntry,
+  totalScanned,
+}) {
   const [permission, requestPermission] = useCameraPermissions();
-  
-  // 1. Synchronous lock for the high-speed camera engine (No race conditions!)
   const isLockedRef = useRef(false);
-
-  // 2. UI-only state to handle visual feedback text & background color
   const [scanStatus, setScanStatus] = useState('ready'); // 'ready' | 'scanned' | 'duplicate'
 
   if (!permission) return <View style={styles.container} />;
-  
+
   if (!permission.granted) {
     return (
       <View style={styles.centerContainer}>
@@ -25,19 +26,15 @@ export default function BarcodeScanner({ onScan, onClose, totalScanned }) {
   }
 
   const handleBarcodeScanned = ({ data }) => {
-    // 1. INSTANT SYNCHRONOUS CHECK: If locked, drop this camera frame immediately!
     if (isLockedRef.current) return;
 
-    // 2. INSTANT SYNCHRONOUS LOCK: Locks memory on the exact same microsecond tick!
     isLockedRef.current = true;
-    
-    // 3. Process the scan
+
     const added = onScan(data);
     setScanStatus(added ? 'scanned' : 'duplicate');
 
-    // 4. UNLOCK memory and reset UI state after 1.5 seconds
     setTimeout(() => {
-      isLockedRef.current = false; // Synchronously unlocks memory
+      isLockedRef.current = false;
       setScanStatus('ready');
     }, 2000);
   };
@@ -51,19 +48,46 @@ export default function BarcodeScanner({ onScan, onClose, totalScanned }) {
         onBarcodeScanned={handleBarcodeScanned}
       />
 
-      <View style={styles.cameraOverlay}>
-        <Text style={[
-          styles.overlayText, 
-          scanStatus === 'duplicate' && styles.duplicateOverlayText,
-          scanStatus === 'scanned' && styles.successOverlayText
-        ]}>
-          {scanStatus === 'duplicate' && "Book already in list, scan another?"}
-          {scanStatus === 'scanned' && "Scanned! Point at next book..."}
-          {scanStatus === 'ready' && "Ready to scan..."}
+      {/* Top Header Controls */}
+      <View style={styles.topBar}>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>Scanned: {totalScanned}</Text>
+        </View>
+        <TouchableOpacity style={styles.doneButton} onPress={onClose}>
+          <Text style={styles.doneButtonText}>Done</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Dead-Center Viewfinder */}
+      <View style={styles.viewfinderContainer} pointerEvents="none">
+        <View
+          style={[
+            styles.viewfinderFrame,
+            scanStatus === 'scanned' && styles.viewfinderSuccess,
+            scanStatus === 'duplicate' && styles.viewfinderDuplicate,
+          ]}
+        />
+      </View>
+
+      {/* Bottom Floating Controls */}
+      <View style={styles.bottomOverlay}>
+        <Text
+          style={[
+            styles.pillBase,
+            styles.statusPill,
+            scanStatus === 'duplicate' && styles.duplicateOverlayText,
+            scanStatus === 'scanned' && styles.successOverlayText,
+          ]}
+        >
+          {scanStatus === 'duplicate' && 'Book already in list'}
+          {scanStatus === 'scanned' && 'Scanned! Next book...'}
+          {scanStatus === 'ready' && 'Align barcode inside frame'}
         </Text>
-        
-        <TouchableOpacity style={[styles.button, styles.closeButton]} onPress={onClose}>
-          <Text style={styles.buttonText}>Done Scanning ({totalScanned})</Text>
+
+        <TouchableOpacity style={styles.manualEntryCard} onPress={onManualEntry}>
+          <Text style={[styles.pillBase, styles.manualEntryText]}>
+            Can&apos;t scan? Add Manually
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -71,22 +95,104 @@ export default function BarcodeScanner({ onScan, onClose, totalScanned }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#000' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  permissionText: { fontSize: 16, textAlign: 'center', marginBottom: 20, color: '#333' },
   button: { backgroundColor: '#007AFF', padding: 15, borderRadius: 8, alignItems: 'center' },
-  closeButton: { backgroundColor: '#333' },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  permissionText: { fontSize: 16, textAlign: 'center', marginBottom: 20 },
-  cameraOverlay: { position: 'absolute', bottom: 40, left: 20, right: 20, alignItems: 'center' },
-  overlayText: {
-    color: '#fff', fontSize: 16, fontWeight: 'bold',
-    backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 15,
-    paddingVertical: 10, borderRadius: 20, marginBottom: 15, textAlign: 'center'
+
+  /* Top Navigation */
+  topBar: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  badge: {
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  badgeText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  doneButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  doneButtonText: { color: '#000', fontSize: 14, fontWeight: '700' },
+
+  /* Dead-Center Viewfinder */
+  viewfinderContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  viewfinderFrame: {
+    width: 270,
+    height: 160,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  viewfinderSuccess: {
+    borderColor: '#28a745',
+    backgroundColor: 'rgba(40, 167, 69, 0.15)',
+  },
+  viewfinderDuplicate: {
+    borderColor: '#d9534f',
+    backgroundColor: 'rgba(217, 83, 79, 0.15)',
+  },
+
+  /* Bottom Controls & Uniform Pill Styling */
+  bottomOverlay: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  pillBase: {
+    width: 250,
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: 1,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '600',
+    overflow: 'hidden',
+  },
+  statusPill: {
+    color: '#fff',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    marginBottom: 10,
   },
   duplicateOverlayText: {
-    backgroundColor: 'rgba(217, 83, 79, 0.9)',
+    backgroundColor: 'rgba(217, 83, 79, 0.95)',
+    borderColor: 'rgba(217, 83, 79, 1)',
   },
   successOverlayText: {
-    backgroundColor: 'rgba(40, 167, 69, 0.95)', // Green accent for successful scans
+    backgroundColor: 'rgba(40, 167, 69, 0.95)',
+    borderColor: 'rgba(40, 167, 69, 1)',
+  },
+
+  manualEntryCard: {
+    alignItems: 'center',
+  },
+  manualEntryText: {
+    color: '#e0e0e0',
+    backgroundColor: 'rgba(40, 40, 40, 0.85)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
 });

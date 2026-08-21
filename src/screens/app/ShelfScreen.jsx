@@ -10,6 +10,7 @@ import {
 
 import BarcodeScanner from '../../components/BarcodeScanner';
 import BookList from '../../components/BookList';
+import ManualIsbnEntryModal from '../../components/ManualIsbnEntryModal';
 
 import {
   getMyShelf,
@@ -33,6 +34,9 @@ export default function ShelfScreen() {
 
   // ISBNs whose backend requests are currently in progress
   const [processingIsbns, setProcessingIsbns] = useState([]);
+
+  // Whether the manual-ISBN-entry modal is open
+  const [manualEntryVisible, setManualEntryVisible] = useState(false);
 
   const loadShelf = useCallback(async () => {
     setError(null);
@@ -79,6 +83,30 @@ export default function ShelfScreen() {
     processBook(isbn);
 
     return true;
+  }
+
+  /*
+   * Handles a manually-typed ISBN, from either the "Can't scan?"
+   * button (barcode unreadable by the camera) or the "Log
+   * manually" option on a BOOK_NOT_FOUND alert (barcode read
+   * fine, but resolved to something no provider recognizes —
+   * this lets the person retype it in case of a misread).
+   *
+   * Reuses handleScan so a manual entry is tracked in the batch
+   * counter and deduplicated within the session exactly like a
+   * camera scan would be.
+   */
+  function handleManualSubmit(isbn) {
+    setManualEntryVisible(false);
+
+    const added = handleScan(isbn);
+
+    if (!added) {
+      Alert.alert(
+        'Already scanned',
+        'You already added this ISBN in this session.'
+      );
+    }
   }
 
   async function processBook(isbn) {
@@ -142,13 +170,7 @@ export default function ShelfScreen() {
         [
           {
             text: 'Log manually',
-            onPress: () => {
-              // TODO: manual-entry flow isn't built yet.
-              Alert.alert(
-                'Coming soon',
-                'Manually logging a book isn\u2019t available yet.'
-              );
-            },
+            onPress: () => setManualEntryVisible(true),
           },
           { text: 'Dismiss', style: 'cancel' },
         ]
@@ -194,55 +216,58 @@ export default function ShelfScreen() {
     }
   }
 
-  if (isScanning) {
-    return (
-      <BarcodeScanner
-        onScan={handleScan}
-        onClose={handleFinishScanning}
-        totalScanned={scannedIsbns.length}
-      />
-    );
-  }
-
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-        <Text>Loading your shelf...</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Shelf</Text>
-      </View>
+    <>
+      {isScanning ? (
+        <BarcodeScanner
+          onScan={handleScan}
+          onClose={handleFinishScanning}
+          onManualEntry={() => setManualEntryVisible(true)}
+          totalScanned={scannedIsbns.length}
+        />
+      ) : loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" />
+          <Text>Loading your shelf...</Text>
+        </View>
+      ) : (
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Text style={styles.title}>My Shelf</Text>
+          </View>
 
-      {error && (
-        <Text style={styles.error}>
-          {error}
-        </Text>
+          {error && (
+            <Text style={styles.error}>
+              {error}
+            </Text>
+          )}
+
+          <BookList
+            books={books}
+            processingIsbns={processingIsbns}
+            onDelete={handleDeleteBook}
+          />
+
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={() => {
+              setScannedIsbns([]);
+              setIsScanning(true);
+            }}
+          >
+            <Text style={styles.scanButtonText}>
+              Scan Books
+            </Text>
+          </TouchableOpacity>
+        </View>
       )}
 
-      <BookList
-        books={books}
-        processingIsbns={processingIsbns}
-        onDelete={handleDeleteBook}
+      <ManualIsbnEntryModal
+        visible={manualEntryVisible}
+        onSubmit={handleManualSubmit}
+        onCancel={() => setManualEntryVisible(false)}
       />
-
-      <TouchableOpacity
-        style={styles.scanButton}
-        onPress={() => {
-          setScannedIsbns([]);
-          setIsScanning(true);
-        }}
-      >
-        <Text style={styles.scanButtonText}>
-          Scan Books
-        </Text>
-      </TouchableOpacity>
-    </View>
+    </>
   );
 }
 
