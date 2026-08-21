@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingTop: 16,
-    paddingBottom: 0, // Reduced this to cut down on internal bottom space
+    paddingBottom: 16, // Reduced this to cut down on internal bottom space
     paddingHorizontal: 16,
     backgroundColor: '#f8fafc', // Contrasting inner color
     borderRadius: 16,

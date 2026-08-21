@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,9 +6,13 @@ import {
   Image,
 } from 'react-native';
 
-export default function BookItem({ book, onDelete }) {
+export default function BookItem({ book, onDelete, onPress }) {
   return (
-    <View style={styles.listItem}>
+    <TouchableOpacity
+      style={styles.listItem}
+      onPress={() => onPress?.(book)}
+      activeOpacity={0.7}
+    >
       {book.coverUrl ? (
         <Image
           source={{ uri: book.coverUrl }}
@@ -17,7 +20,7 @@ export default function BookItem({ book, onDelete }) {
         />
       ) : (
         <View style={styles.noCover}>
-          <Text>No cover</Text>
+          <Text style={styles.noCoverText}>No cover</Text>
         </View>
       )}
 
@@ -30,14 +33,8 @@ export default function BookItem({ book, onDelete }) {
           {book.authors?.join(', ') || 'Unknown author'}
         </Text>
 
-        {book.pageCount && (
-          <Text style={styles.pages}>
-            {book.pageCount} pages
-          </Text>
-        )}
-
-        <Text style={styles.isbnText}>
-          ISBN: {book.isbn}
+        <Text style={styles.meta}>
+          {book.pageCount ? `${book.pageCount} pages · ` : ''}ISBN: {book.isbn}
         </Text>
 
         {onDelete && (
@@ -50,65 +47,74 @@ export default function BookItem({ book, onDelete }) {
           </TouchableOpacity>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   listItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 12,
   },
 
   cover: {
-    width: 70,
-    height: 100,
-    marginRight: 12,
+    width: 64,
+    height: 92,
+    borderRadius: 8,
+    marginRight: 14,
   },
 
   noCover: {
-    width: 70,
-    height: 100,
-    marginRight: 12,
-    backgroundColor: '#eee',
+    width: 64,
+    height: 92,
+    borderRadius: 8,
+    marginRight: 14,
+    backgroundColor: '#e2e8f0',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
+  noCoverText: {
+    fontSize: 12,
+    color: '#475569',
+    textAlign: 'center',
+  },
+
   bookInfo: {
     flex: 1,
+    paddingTop: 2,
   },
 
   title: {
     fontSize: 17,
-    fontWeight: 'bold',
-    marginBottom: 5,
+    fontWeight: '700',
+    color: '#0f172a',
+    lineHeight: 22,
   },
 
   authors: {
-    marginBottom: 5,
+    fontSize: 13,
+    color: '#64748b',
+    marginTop: 1,
   },
 
-  pages: {
-    color: '#666',
-    marginBottom: 5,
-  },
-
-  isbnText: {
-    fontSize: 12,
-    fontFamily: 'monospace',
-    color: '#888',
+  meta: {
+    fontSize: 13,
+    color: '#334155',
+    lineHeight: 18,
+    marginTop: 6,
   },
 
   deleteText: {
-    color: '#cc0000',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#dc2626',
     marginTop: 10,
   },
 });

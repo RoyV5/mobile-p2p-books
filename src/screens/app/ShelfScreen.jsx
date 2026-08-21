@@ -246,6 +246,7 @@ export default function ShelfScreen() {
             books={books}
             processingIsbns={processingIsbns}
             onDelete={handleDeleteBook}
+            isOwnShelf
           />
 
           <TouchableOpacity
@@ -274,7 +275,8 @@ export default function ShelfScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
 
   center: {
@@ -287,6 +289,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
     marginBottom: 15,
   },
 
@@ -300,6 +303,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
+    marginHorizontal: 20,
     marginTop: 10,
   },
 
@@ -310,6 +314,7 @@ const styles = StyleSheet.create({
 
   error: {
     color: 'red',
+    paddingHorizontal: 20,
     marginBottom: 10,
   },
 });

@@ -14,9 +14,13 @@ import LoadingScreen from '../screens/LoadingScreen';
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {
-    const { auth, loading } = useAuth();
+    const { auth, loading, sessionError } = useAuth();
 
     const [showLoading, setShowLoading] = useState(true);
+
+    // Once the user has seen/dismissed a hydration error, stop holding
+    // them on the loading screen for it even if sessionError is still set.
+    const [errorDismissed, setErrorDismissed] = useState(false);
 
     const [mountedAuth, setMountedAuth] = useState(null);
 
@@ -25,18 +29,21 @@ export default function RootNavigator() {
     ).current;
 
     useEffect(() => {
-        // Initial load: when loading finishes, mount the current auth value
-        if (!loading) {
-            setShowLoading(false);
-            setMountedAuth(auth);
+        // Initial load: once loading finishes, hold on the loading screen
+        // a beat longer if there's a session error to show - otherwise
+        // move straight on to mounting the current auth value.
+        if (loading) return;
+        if (sessionError && !errorDismissed) return;
 
-            Animated.timing(contentOpacity, {
-                toValue: 1,
-                duration: 400,
-                useNativeDriver: true
-            }).start();
-        }
-    }, [loading, contentOpacity, auth]);
+        setShowLoading(false);
+        setMountedAuth(auth);
+
+        Animated.timing(contentOpacity, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true
+        }).start();
+    }, [loading, sessionError, errorDismissed, contentOpacity, auth]);
 
     useEffect(() => {
         // If auth changes after initial mount, cross-fade between the
@@ -63,7 +70,12 @@ export default function RootNavigator() {
     }, [auth, loading, mountedAuth, contentOpacity]);
 
     if (showLoading) {
-        return <LoadingScreen />;
+        return (
+            <LoadingScreen
+                error={sessionError && !errorDismissed ? sessionError : null}
+                onDismiss={() => setErrorDismissed(true)}
+            />
+        );
     }
 
  return (

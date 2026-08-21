@@ -93,6 +93,8 @@ export default function UserProfileScreen() {
               {profileHeader}
             </View>
           }
+          isOwnShelf={false}
+          shelfOwner={profile.user}
         />
       )}
     </View>
@@ -110,9 +112,9 @@ const styles = StyleSheet.create({
   paddedContent: {
     padding: 20,
   },
-  // Ensures the header has padding, but the list items can span full width or handle their own padding
+  // BookList's own contentContainerStyle now supplies horizontal padding
+  // for the header and the list items alike, so this only needs top space.
   headerWrapper: {
-    paddingHorizontal: 20,
     paddingTop: 20,
   },
   center: {
